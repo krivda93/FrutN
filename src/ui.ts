@@ -118,12 +118,28 @@ export class UI {
     });
 
     this.fullscreenButton.addEventListener('click', () => {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => {
-          console.warn(`Error attempting to enable full-screen mode: ${err.message}`);
-        });
+      const doc = document as any;
+      const docEl = document.documentElement as any;
+      
+      const requestFullscreen = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+      const exitFullscreen = doc.exitFullscreen || doc.webkitExitFullscreen || doc.mozCancelFullScreen || doc.msExitFullscreen;
+      const fullscreenElement = doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement;
+
+      if (!fullscreenElement) {
+        if (requestFullscreen) {
+          const promise = requestFullscreen.call(docEl);
+          if (promise) {
+            promise.catch((err: any) => {
+              console.warn(`Error attempting to enable full-screen mode: ${err.message}`);
+            });
+          }
+        } else {
+          alert('Полноэкранный режим не поддерживается в этом браузере (например, в iOS Safari на iPhone). Попробуйте добавить сайт на домашний экран.');
+        }
       } else {
-        document.exitFullscreen();
+        if (exitFullscreen) {
+          exitFullscreen.call(doc);
+        }
       }
     });
 

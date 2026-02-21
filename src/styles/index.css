@@ -9,8 +9,10 @@ body, html {
   overflow: hidden;
   background: radial-gradient(circle, #3a2518 0%, #1a100a 100%);
   user-select: none;
+  -webkit-user-select: none;
   touch-action: none;
   font-family: 'Luckiest Guy', cursive, sans-serif;
+  overscroll-behavior: none;
 }
 
 #game-container {

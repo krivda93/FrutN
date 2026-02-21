@@ -21,8 +21,7 @@ export class Game {
   lastTime: number = 0;
   spawnTimer: number = 0;
   
-  pointerActive: boolean = false;
-  pointerPath: PointerPoint[] = [];
+  activePointers: Map<number, { active: boolean, path: PointerPoint[] }> = new Map();
   
   score: number = 0;
   lives: number = 3;
@@ -109,6 +108,7 @@ export class Game {
     this.lives = this.settings.lives;
     this.isPlaying = true;
     this.spawnTimer = 0;
+    this.activePointers.clear();
     
     // Clean up old
     this.fruits.forEach(f => this.scene.remove(f.mesh));
@@ -145,25 +145,33 @@ export class Game {
 
   onPointerDown = (e: PointerEvent) => {
     if (!this.isPlaying) return;
-    this.pointerActive = true;
-    this.pointerPath = [{ x: e.clientX, y: e.clientY, age: 0 }];
+    this.activePointers.set(e.pointerId, {
+      active: true,
+      path: [{ x: e.clientX, y: e.clientY, age: 0 }]
+    });
   }
 
   onPointerMove = (e: PointerEvent) => {
-    if (!this.pointerActive || !this.isPlaying) return;
+    if (!this.isPlaying) return;
+    
+    const pointer = this.activePointers.get(e.pointerId);
+    if (!pointer || !pointer.active) return;
     
     const currPoint = { x: e.clientX, y: e.clientY, age: 0 };
-    const prevPoint = this.pointerPath[this.pointerPath.length - 1];
+    const prevPoint = pointer.path[pointer.path.length - 1];
     
-    this.pointerPath.push(currPoint);
+    pointer.path.push(currPoint);
     
     if (prevPoint) {
       this.checkSlice(prevPoint.x, prevPoint.y, currPoint.x, currPoint.y);
     }
   }
 
-  onPointerUp = () => {
-    this.pointerActive = false;
+  onPointerUp = (e: PointerEvent) => {
+    const pointer = this.activePointers.get(e.pointerId);
+    if (pointer) {
+      pointer.active = false;
+    }
   }
 
   checkSlice(x1: number, y1: number, x2: number, y2: number) {
@@ -234,43 +242,48 @@ export class Game {
 
   drawTrail(dt: number) {
     this.trailCtx.clearRect(0, 0, this.width, this.height);
-    
-    if (this.pointerPath.length < 2) return;
 
     this.trailCtx.lineCap = 'round';
     this.trailCtx.lineJoin = 'round';
-    
-    for (let i = this.pointerPath.length - 1; i >= 0; i--) {
-      this.pointerPath[i].age += dt;
-      if (this.pointerPath[i].age > 0.15) { 
-        this.pointerPath.splice(i, 1);
+
+    for (const [id, pointer] of this.activePointers.entries()) {
+      for (let i = pointer.path.length - 1; i >= 0; i--) {
+        pointer.path[i].age += dt;
+        if (pointer.path[i].age > 0.15) { 
+          pointer.path.splice(i, 1);
+        }
       }
+
+      if (pointer.path.length < 2) {
+        if (!pointer.active && pointer.path.length === 0) {
+          this.activePointers.delete(id);
+        }
+        continue;
+      }
+
+      this.trailCtx.beginPath();
+      this.trailCtx.moveTo(pointer.path[0].x, pointer.path[0].y);
+      for (let i = 1; i < pointer.path.length - 1; i++) {
+          const p1 = pointer.path[i];
+          const p2 = pointer.path[i+1];
+          const xc = (p1.x + p2.x) / 2;
+          const yc = (p1.y + p2.y) / 2;
+          this.trailCtx.quadraticCurveTo(p1.x, p1.y, xc, yc);
+      }
+      const last = pointer.path[pointer.path.length - 1];
+      this.trailCtx.lineTo(last.x, last.y);
+
+      this.trailCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+      this.trailCtx.lineWidth = 12;
+      this.trailCtx.shadowColor = '#00faff';
+      this.trailCtx.shadowBlur = 10;
+      this.trailCtx.stroke();
+      
+      this.trailCtx.strokeStyle = '#ffffff';
+      this.trailCtx.lineWidth = 6;
+      this.trailCtx.shadowBlur = 0;
+      this.trailCtx.stroke();
     }
-
-    if (this.pointerPath.length < 2) return;
-
-    this.trailCtx.beginPath();
-    this.trailCtx.moveTo(this.pointerPath[0].x, this.pointerPath[0].y);
-    for (let i = 1; i < this.pointerPath.length - 1; i++) {
-        const p1 = this.pointerPath[i];
-        const p2 = this.pointerPath[i+1];
-        const xc = (p1.x + p2.x) / 2;
-        const yc = (p1.y + p2.y) / 2;
-        this.trailCtx.quadraticCurveTo(p1.x, p1.y, xc, yc);
-    }
-    const last = this.pointerPath[this.pointerPath.length - 1];
-    this.trailCtx.lineTo(last.x, last.y);
-
-    this.trailCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-    this.trailCtx.lineWidth = 12;
-    this.trailCtx.shadowColor = '#00faff';
-    this.trailCtx.shadowBlur = 10;
-    this.trailCtx.stroke();
-    
-    this.trailCtx.strokeStyle = '#ffffff';
-    this.trailCtx.lineWidth = 6;
-    this.trailCtx.shadowBlur = 0;
-    this.trailCtx.stroke();
   }
 
   loop(time: number) {
@@ -312,15 +325,6 @@ export class Game {
 
     this.particles.update(dt);
     this.drawTrail(dt);
-
-    if (!this.pointerActive && this.pointerPath.length > 0) {
-      for (let i = this.pointerPath.length - 1; i >= 0; i--) {
-        this.pointerPath[i].age += dt;
-        if (this.pointerPath[i].age > 0.15) {
-          this.pointerPath.splice(i, 1);
-        }
-      }
-    }
 
     this.renderer.render(this.scene, this.camera);
   }

@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { FRUIT_TYPES, FruitType, GRAVITY } from './definitions';
 import { Fruit, SliceHalf, ParticleSystem } from './entities';
 import { distToSegment, vibrate } from './utils';
+import { GameSettings, defaultSettings } from './settings';
 
 type PointerPoint = { x: number; y: number; age: number };
 
@@ -26,6 +27,7 @@ export class Game {
   score: number = 0;
   lives: number = 3;
   isPlaying: boolean = false;
+  settings: GameSettings = defaultSettings;
 
   width: number = 0;
   height: number = 0;
@@ -101,9 +103,10 @@ export class Game {
     this.camera.updateProjectionMatrix();
   }
 
-  start() {
+  start(settings: GameSettings) {
+    this.settings = settings;
     this.score = 0;
-    this.lives = 3;
+    this.lives = this.settings.lives;
     this.isPlaying = true;
     this.spawnTimer = 0;
     
@@ -120,7 +123,7 @@ export class Game {
   spawnFruits() {
     const num = Math.floor(Math.random() * 3) + 1; // 1 to 3
     for (let i = 0; i < num; i++) {
-       const isBombChance = Math.random() < 0.15;
+       const isBombChance = this.settings.bombsEnabled ? Math.random() < 0.15 : false;
        const types = FRUIT_TYPES.filter(t => isBombChance ? t.isBomb : !t.isBomb);
        const type = types[Math.floor(Math.random() * types.length)];
        
@@ -273,10 +276,11 @@ export class Game {
   loop(time: number) {
     requestAnimationFrame(t => this.loop(t));
     
-    const dt = Math.min((time - this.lastTime) / 1000, 0.1);
+    let dt = Math.min((time - this.lastTime) / 1000, 0.1);
     this.lastTime = time;
-
+    
     if (this.isPlaying) {
+      dt *= this.settings.gameSpeed;
       this.spawnTimer += dt;
       let interval = Math.max(0.8, 2.5 - this.score * 0.02);
       if (this.spawnTimer > interval) {

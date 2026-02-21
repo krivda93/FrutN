@@ -1,12 +1,20 @@
-
 import { UI } from './ui';
 import { Game } from './game';
+import { loadSettings, saveSettings } from './settings';
 
-function main() {
-  const ui = new UI(() => {
-    ui.hideMenu();
-    game.start();
-  });
+async function main() {
+  const settings = await loadSettings();
+
+  const ui = new UI(
+    (currentSettings) => {
+      ui.hideMenu();
+      game.start(currentSettings);
+    },
+    settings,
+    (updatedSettings) => {
+      saveSettings(updatedSettings);
+    }
+  );
 
   const webglCanvas = document.getElementById('webgl-canvas') as HTMLCanvasElement;
   const trailCanvas = document.getElementById('trail-canvas') as HTMLCanvasElement;

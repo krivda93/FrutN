@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="slice-grad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FF3366"/>
+      <stop offset="100%" stop-color="#FF9933"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Left Half -->
+  <path d="M 60, 20 C 30, 20 10, 40 10, 64 C 10, 88 30, 108 60, 108 Z" fill="url(#slice-grad)" transform="translate(-8, 5) rotate(-10 60 64)"/>
+  
+  <!-- Right Half -->
+  <path d="M 68, 20 C 98, 20 118, 40 118, 64 C 118, 88 98, 108 68, 108 Z" fill="url(#slice-grad)" transform="translate(8, -5) rotate(10 68 64)"/>
+
+  <!-- Seeds (Left) -->
+  <circle cx="45" cy="50" r="4" fill="#333" transform="translate(-8, 5) rotate(-10 60 64)"/>
+  <circle cx="35" cy="65" r="4" fill="#333" transform="translate(-8, 5) rotate(-10 60 64)"/>
+  <circle cx="50" cy="80" r="4" fill="#333" transform="translate(-8, 5) rotate(-10 60 64)"/>
+
+  <!-- Seeds (Right) -->
+  <circle cx="83" cy="50" r="4" fill="#333" transform="translate(8, -5) rotate(10 68 64)"/>
+  <circle cx="93" cy="65" r="4" fill="#333" transform="translate(8, -5) rotate(10 68 64)"/>
+  <circle cx="78" cy="80" r="4" fill="#333" transform="translate(8, -5) rotate(10 68 64)"/>
+
+  <!-- The Sword Slash / Cut -->
+  <path d="M 10 118 L 118 10" stroke="#00F0FF" stroke-width="6" stroke-linecap="round" filter="url(#glow)"/>
+  <path d="M 15 113 L 113 15" stroke="#FFF" stroke-width="2" stroke-linecap="round"/>
+</svg>

@@ -128,7 +128,7 @@ export class Game {
        const startY = -12;
        
        const vx = -startX * 0.2 + (Math.random() - 0.5) * 2;
-       const vy = 16 + Math.random() * 4;
+       const vy = 18 + Math.random() * 4;
        
        const fruit = new Fruit(
          type, 

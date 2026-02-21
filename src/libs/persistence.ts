@@ -7,15 +7,18 @@ type Persistence = {
 
 export const persistence: Persistence = {
   setItem(key, value) {
-    return window.persistentStorage.setItem(key, value);
+    localStorage.setItem(key, value);
+    return Promise.resolve();
   },
   getItem(key) {
-    return window.persistentStorage.getItem(key);
+    return Promise.resolve(localStorage.getItem(key));
   },
   removeItem(key) {
-    return window.persistentStorage.removeItem(key);
+    localStorage.removeItem(key);
+    return Promise.resolve();
   },
   clear() {
-    return window.persistentStorage.clear();
+    localStorage.clear();
+    return Promise.resolve();
   },
 };
